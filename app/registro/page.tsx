@@ -34,7 +34,6 @@ export default function RegisterForm() {
 
   return (
   <form onSubmit={handleLogin}>
-    <br></br>
 	<Input name="name" />
     <Input name="email" />
     <Input name="senha" />
