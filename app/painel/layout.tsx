@@ -5,12 +5,24 @@ import {
   SidebarTrigger
 } from "@/components/ui/sidebar"
 import UserMenu from "@/components/user-menu"
+import { auth } from "@/delivery/auth"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 
 export default async function PainelLayout({
   children
 }: {
   children: React.ReactNode
 }) {
+  // Verificar autenticação
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+
+  if (!session?.user) {
+    redirect("/login")
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
