@@ -1,5 +1,5 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import prisma from '@delivery/db'
+import prisma from '@/lib/prisma-client'
 import AddCategorias from './_components/add-categorias'
 import EditCategoria from './_components/edit-categoria'
 import DeleteCategoria from './_components/delete-categoria'
