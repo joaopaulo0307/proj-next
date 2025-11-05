@@ -25,7 +25,7 @@ export default async function CategoriasPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {categorias.map(categoria => (
+          {categorias.map((categoria: { id: any; nome: any }) => (
             <Card key={categoria.id} className="transition-shadow hover:shadow-md">
               <CardHeader className="pb-3">
                 <CardTitle className="line-clamp-1 text-lg">{categoria.nome}</CardTitle>

@@ -1,6 +1,6 @@
 'use server'
 
-import prisma from '@delivery/db'
+import prisma from '@/lib/prisma-client'
 import { revalidatePath } from 'next/cache'
 
 export async function criarCategoria(formData: FormData) {

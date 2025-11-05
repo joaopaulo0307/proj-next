@@ -21,7 +21,7 @@ export default function LoginForm() {
       password: senha
     },
     {
-      onSuccess: () => redirect("/dashboard"),
+      onSuccess: () => redirect("/painel"),
       onRequest: () => setloading(true),
       onResponse:() => setloading(false),
       onError: (ctx) => setError(ctx.error.message)
