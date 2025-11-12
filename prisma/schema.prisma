@@ -74,6 +74,7 @@ model Verification {
 model Categorias {
   id String @id @default(uuid())
   nome String
+  produtos  Produtos[]
 }
 
 model Produtos {
