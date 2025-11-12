@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma-client'
-import AddProduto from '@/_components/add-produto'
-import EditProduto from '/_components/edit-produto'
+import AddProduto from './_components/add-produto'
+import EditProduto from './_components/edit-produto'
 import DeleteProduto from './_components/delete-produto'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
