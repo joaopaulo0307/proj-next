@@ -17,7 +17,6 @@ export async function criarPedido(formData: FormData) {
   const result = pedidoSchema.safeParse(data)
 
   if (!result.success) {
-    // ✅ Novo nome: issues (não errors)
     const firstError = result.error.issues[0]?.message ?? 'Erro de validação'
     return { error: firstError }
   }
@@ -41,3 +40,50 @@ export async function criarPedido(formData: FormData) {
     return { error: 'Erro ao criar pedido' }
   }
 }
+export async function editarPedido(id: string, formData: FormData) {
+  const produtos = formData.getAll('produtos') as string[]
+  const data = { ...Object.fromEntries(formData), produtos }
+  const result = pedidoSchema.safeParse(data)
+
+  if (!result.success) {
+    const firstError = result.error.issues[0]?.message ?? 'Erro de validação'
+    return { error: firstError }
+  }
+
+  try {
+    await prisma.pedidos.update({
+      where: { id },
+      data: {
+        nome: result.data.nome,
+        endereco: result.data.endereco,
+        telefone: result.data.telefone,
+        produtos: {
+          // limpa e reconecta produtos
+          set: [],
+          connect: result.data.produtos.map((id) => ({ id })),
+        },
+      },
+    })
+
+    revalidatePath('/painel/pedidos')
+    return { success: true }
+  } catch (err) {
+    console.error('Erro ao editar pedido:', err)
+    return { error: 'Erro ao editar pedido' }
+  }
+}
+
+export async function excluirPedido(id: string) {
+  try {
+    await prisma.pedidos.delete({
+      where: { id },
+    })
+
+    revalidatePath('/painel/pedidos')
+    return { success: true }
+  } catch (err) {
+    console.error('Erro ao excluir pedido:', err)
+    return { error: 'Erro ao excluir pedido' }
+  }
+}
+
