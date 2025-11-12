@@ -8,7 +8,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState, useTransition, useEffect } from 'react'
-import { editarProduto } from '../actions'
+import { editarProduto, buscarCategorias } from '../actions'
 import { toast } from 'sonner'
 
 interface Produto {
@@ -24,20 +24,39 @@ interface EditProdutoProps {
   onSuccess?: () => void
 }
 
+interface EditProdutoProps {
+  produto: Produto
+  categorias: { id: string; nome: string }[] // ← Adicione esta linha
+  onSuccess?: () => void
+}
+
 export default function EditProduto({ produto, onSuccess }: EditProdutoProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [categorias, setCategorias] = useState<{ id: string; nome: string }[]>([])
 
   useEffect(() => {
-    fetch('/api/categorias').then(res => res.json()).then(setCategorias)
-  }, [])
+    async function carregarCategorias() {
+      try {
+        const categoriasData = await buscarCategorias()
+        setCategorias(categoriasData)
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error)
+        toast.error('Erro ao carregar categorias')
+      }
+    }
+
+    if (open) {
+      carregarCategorias()
+    }
+  }, [open])
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
       const result = await editarProduto(produto.id, formData)
-      if (result.error) toast.error(result.error)
-      else {
+      if (result.error) {
+        toast.error(result.error)
+      } else {
         toast.success('Produto atualizado com sucesso!')
         setOpen(false)
         onSuccess?.()
@@ -97,21 +116,36 @@ export default function EditProduto({ produto, onSuccess }: EditProdutoProps) {
                 className="border rounded-md p-2 w-full" 
                 defaultValue={produto.categoriaId}
                 required 
-                disabled={isPending}
+                disabled={isPending || categorias.length === 0}
               >
                 <option value="">Selecione</option>
                 {categorias.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nome}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
                 ))}
               </select>
+              {categorias.length === 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Carregando categorias...
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)} 
+              disabled={isPending}
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
-              Atualizar
+            <Button 
+              type="submit" 
+              disabled={isPending || categorias.length === 0}
+            >
+              {isPending ? 'Atualizando...' : 'Atualizar'}
             </Button>
           </DialogFooter>
         </form>

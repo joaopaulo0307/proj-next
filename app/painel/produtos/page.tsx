@@ -5,16 +5,21 @@ import DeleteProduto from './_components/delete-produto'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default async function ProdutosPage() {
-  const produtos = await prisma.produtos.findMany({
-    include: { categoria: true },
-    orderBy: { nome: 'asc' },
-  })
+  const [produtos, categorias] = await Promise.all([
+    prisma.produtos.findMany({
+      include: { categoria: true },
+      orderBy: { nome: 'asc' },
+    }),
+    prisma.categorias.findMany({
+      orderBy: { nome: 'asc' },
+    })
+  ])
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Produtos</h1>
-        <AddProduto />
+        <AddProduto categorias={categorias} />
       </div>
 
       {produtos.length === 0 ? (
@@ -37,7 +42,7 @@ export default async function ProdutosPage() {
                 )}
               </CardContent>
               <CardFooter className="flex justify-end gap-2">
-                <EditProduto produto={produto} />
+                <EditProduto produto={produto} categorias={categorias} />
                 <DeleteProduto produto={produto} />
               </CardFooter>
             </Card>

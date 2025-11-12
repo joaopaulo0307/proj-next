@@ -75,6 +75,9 @@ model Categorias {
   id       String     @id @default(uuid())
   nome     String
   produtos Produtos[]
+
+  @@map("categorias")
+
 }
 
 model Produtos {
@@ -85,7 +88,10 @@ model Produtos {
   categoriaId String
   categoria   Categorias @relation(fields: [categoriaId], references: [id])
   pedidos     Pedidos[]  @relation("PedidosProdutos")
+
+  @@map("produtos")
 }
+
 
 model Pedidos {
   id       String     @id @default(uuid())

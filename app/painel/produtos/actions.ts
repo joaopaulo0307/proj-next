@@ -16,7 +16,7 @@ export async function criarProduto(formData: FormData) {
   const result = produtoSchema.safeParse(data)
 
   if (!result.success) {
-    // Correção: usar result.error.issues em vez de result.error.errors
+ 
     const firstError = result.error.issues[0]
     return { error: firstError.message }
   }
@@ -35,7 +35,7 @@ export async function editarProduto(id: string, formData: FormData) {
   const result = produtoSchema.safeParse(data)
 
   if (!result.success) {
-    // Correção: usar result.error.issues em vez de result.error.errors
+
     const firstError = result.error.issues[0]
     return { error: firstError.message }
   }
@@ -56,5 +56,25 @@ export async function excluirProduto(id: string) {
     return { success: true }
   } catch {
     return { error: 'Erro ao excluir produto' }
+  }
+}
+
+
+// Em actions.ts (produtos)
+export async function buscarCategorias() {
+  try {
+    const categorias = await prisma.categorias.findMany({
+      select: {
+        id: true,
+        nome: true
+      },
+      orderBy: {
+        nome: 'asc'
+      }
+    })
+    return categorias
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error)
+    return []
   }
 }

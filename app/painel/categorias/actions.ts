@@ -17,7 +17,9 @@ export async function criarCategoria(formData: FormData) {
       },
     })
 
+    // Revalida ambas as páginas
     revalidatePath('/painel/categorias')
+    revalidatePath('/painel/produtos') // ← Adicione esta linha
     return { success: true }
   } catch (error) {
     console.error('Erro ao criar categoria:', error)
@@ -25,6 +27,7 @@ export async function criarCategoria(formData: FormData) {
   }
 }
 
+// Faça o mesmo para editarCategoria e excluirCategoria
 export async function editarCategoria(id: string, formData: FormData) {
   const nome = formData.get('nome') as string
 
@@ -41,6 +44,7 @@ export async function editarCategoria(id: string, formData: FormData) {
     })
 
     revalidatePath('/painel/categorias')
+    revalidatePath('/painel/produtos') // ← Adicione esta linha
     return { success: true }
   } catch (error) {
     console.error('Erro ao editar categoria:', error)
@@ -55,6 +59,7 @@ export async function excluirCategoria(id: string) {
     })
 
     revalidatePath('/painel/categorias')
+    revalidatePath('/painel/produtos') // ← Adicione esta linha
     return { success: true }
   } catch (error) {
     console.error('Erro ao excluir categoria:', error)
