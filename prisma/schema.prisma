@@ -72,24 +72,25 @@ model Verification {
 }
 
 model Categorias {
-  id String @id @default(uuid())
-  nome String
-  produtos  Produtos[]
+  id       String     @id @default(uuid())
+  nome     String
+  produtos Produtos[]
 }
 
 model Produtos {
-  id           String     @id @default(uuid())
-  nome         String
-  preco        Float
-  descricao    String?
-  categoriaId  String
-  categoria    Categorias @relation(fields: [categoriaId], references: [id])
+  id          String     @id @default(uuid())
+  nome        String
+  preco       Float
+  descricao   String?
+  categoriaId String
+  categoria   Categorias @relation(fields: [categoriaId], references: [id])
+  pedidos     Pedidos[]  @relation("PedidosProdutos")
 }
 
 model Pedidos {
-  id         String     @id @default(uuid())
-  nome       String
-  endereco   String
-  telefone   String
-  produtos   Produtos[]
+  id       String     @id @default(uuid())
+  nome     String
+  endereco String
+  telefone String
+  produtos Produtos[] @relation("PedidosProdutos")
 }
