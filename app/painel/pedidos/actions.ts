@@ -5,15 +5,21 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const pedidoSchema = z.object({
-  nome: z.string().min(2, 'Nome obrigatório'),
-  endereco: z.string().min(5, 'Endereço obrigatório'),
-  telefone: z.string().min(8, 'Telefone inválido'),
+  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  endereco: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
+  telefone: z.string().min(8, 'Telefone deve ter pelo menos 8 dígitos'),
   produtos: z.array(z.string().uuid()).min(1, 'Selecione ao menos um produto'),
 })
 
 export async function criarPedido(formData: FormData) {
   const produtos = formData.getAll('produtos') as string[]
-  const data = { ...Object.fromEntries(formData), produtos }
+  const data = { 
+    nome: formData.get('nome') as string,
+    endereco: formData.get('endereco') as string,
+    telefone: formData.get('telefone') as string,
+    produtos 
+  }
+  
   const result = pedidoSchema.safeParse(data)
 
   if (!result.success) {
@@ -37,12 +43,19 @@ export async function criarPedido(formData: FormData) {
     return { success: true }
   } catch (err) {
     console.error('Erro ao criar pedido:', err)
-    return { error: 'Erro ao criar pedido' }
+    return { error: 'Erro interno ao criar pedido' }
   }
 }
+
 export async function editarPedido(id: string, formData: FormData) {
   const produtos = formData.getAll('produtos') as string[]
-  const data = { ...Object.fromEntries(formData), produtos }
+  const data = { 
+    nome: formData.get('nome') as string,
+    endereco: formData.get('endereco') as string,
+    telefone: formData.get('telefone') as string,
+    produtos 
+  }
+  
   const result = pedidoSchema.safeParse(data)
 
   if (!result.success) {
@@ -58,7 +71,6 @@ export async function editarPedido(id: string, formData: FormData) {
         endereco: result.data.endereco,
         telefone: result.data.telefone,
         produtos: {
-          // limpa e reconecta produtos
           set: [],
           connect: result.data.produtos.map((id) => ({ id })),
         },
@@ -69,7 +81,7 @@ export async function editarPedido(id: string, formData: FormData) {
     return { success: true }
   } catch (err) {
     console.error('Erro ao editar pedido:', err)
-    return { error: 'Erro ao editar pedido' }
+    return { error: 'Erro interno ao editar pedido' }
   }
 }
 
@@ -83,7 +95,6 @@ export async function excluirPedido(id: string) {
     return { success: true }
   } catch (err) {
     console.error('Erro ao excluir pedido:', err)
-    return { error: 'Erro ao excluir pedido' }
+    return { error: 'Erro interno ao excluir pedido' }
   }
 }
-
