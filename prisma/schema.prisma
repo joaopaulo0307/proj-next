@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -14,20 +15,19 @@ model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
+  password      String?   
   emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-
-  @@map("users")
 }
 
 model Session {
   id        String   @id @default(cuid())
   expiresAt DateTime
-  token     String   @unique
+  token     String   @unique // Este já cria um constraint único
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -35,7 +35,9 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("sessions")
+  // REMOVE esta linha - conflita com @unique acima
+  // @@unique([token])
+  @@map("session")
 }
 
 model Account {
@@ -54,7 +56,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  @@map("accounts")
+  @@map("account")
 }
 
 model Verification {
@@ -65,39 +67,38 @@ model Verification {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@map("verifications")
+  @@map("verification")
 }
 
 model Categorias {
-  id       String    @id @default(uuid())
+  id       String     @id @default(uuid())
   nome     String
   produtos Produtos[]
-
-  @@map("categorias")
 }
 
 model Produtos {
-  id          String    @id @default(uuid())
+  id          String            @id @default(uuid())
   nome        String
   preco       Float
   descricao   String?
   categoriaId String
-  categoria   Categorias @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
-  
-  // 🔥 CORREÇÃO: Relação muitos-para-muitos com Pedidos
-  pedidos     Pedidos[] @relation("PedidoProdutos")
-  
-  @@map("produtos")
+  categoria   Categorias        @relation(fields: [categoriaId], references: [id])
+  pedidos     PedidosProdutos[] 
 }
 
 model Pedidos {
-  id       String    @id @default(uuid())
+  id       String            @id @default(uuid())
   nome     String
   endereco String
   telefone String
-  
-  // 🔥 CORREÇÃO: Relação muitos-para-muitos com Produtos
-  produtos Produtos[] @relation("PedidoProdutos")
-  
-  @@map("pedidos")
+  produtos PedidosProdutos[]
+}
+
+model PedidosProdutos {
+  id        String   @id @default(uuid()) // chave primária própria
+  pedidoId  String
+  produtoId String
+
+  pedido    Pedidos  @relation(fields: [pedidoId], references: [id])
+  produto   Produtos @relation(fields: [produtoId], references: [id])
 }

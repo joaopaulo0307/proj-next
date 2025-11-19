@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,23 +15,39 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { criarPedido } from '../actions'
 import { toast } from 'sonner'
+import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox"
 
 export default function AddPedido() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [produtos, setProdutos] = useState<{ id: string; nome: string }[]>([])
+  const [selectedProdutos, setSelectedProdutos] = useState<string[]>([])
 
   useEffect(() => {
-    fetch('/api/produtos').then((res) => res.json()).then(setProdutos)
+    fetch('/api/produtos')
+      .then((res) => res.json())
+      .then((data) => {
+        // Ajuste correto para o formato esperado pelo combobox
+        const formatted = data.map((p: any) => ({
+          id: p.id,
+          nome: `${p.nome} — R$ ${Number(p.preco || 0).toFixed(2)}`
+        }))
+        setProdutos(formatted)
+      })
   }, [])
 
   async function handleSubmit(formData: FormData) {
+    formData.append("produtos", selectedProdutos.join(","))
+
     startTransition(async () => {
       const result = await criarPedido(formData)
-      if (result.error) toast.error(result.error)
-      else {
-        toast.success('Pedido criado com sucesso!')
+
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Pedido criado com sucesso!")
         setOpen(false)
+        setSelectedProdutos([])
       }
     })
   }
@@ -41,6 +57,7 @@ export default function AddPedido() {
       <DialogTrigger asChild>
         <Button>Novo Pedido</Button>
       </DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Criar Pedido</DialogTitle>
@@ -48,47 +65,51 @@ export default function AddPedido() {
             Preencha as informações e selecione os produtos do pedido.
           </DialogDescription>
         </DialogHeader>
+
         <form action={handleSubmit}>
           <div className="space-y-4 py-4">
             <div>
               <Label htmlFor="nome">Nome do Cliente</Label>
               <Input id="nome" name="nome" required disabled={isPending} />
             </div>
+
             <div>
               <Label htmlFor="endereco">Endereço</Label>
               <Input id="endereco" name="endereco" required disabled={isPending} />
             </div>
+
             <div>
               <Label htmlFor="telefone">Telefone</Label>
               <Input id="telefone" name="telefone" required disabled={isPending} />
             </div>
+
             <div>
-              <Label htmlFor="produtos">Produtos</Label>
-              <select
-                id="produtos"
-                name="produtos"
-                multiple
-                required
-                className="border rounded-md p-2 w-full h-32"
-                disabled={isPending}
-              >
-                {produtos.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Segure <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd> no Mac) para selecionar múltiplos.
-              </p>
+              <Label>Produtos</Label>
+
+              <MultiSelectCombobox
+                options={produtos.map((p) => ({
+                  label: p.nome,
+                  value: p.id,
+                }))}
+                value={selectedProdutos}
+                onChange={setSelectedProdutos}
+                placeholder="Selecione os produtos"
+              />
             </div>
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
               Cancelar
             </Button>
+
             <Button type="submit" disabled={isPending}>
-              Salvar
+              Criar Pedido
             </Button>
           </DialogFooter>
         </form>
