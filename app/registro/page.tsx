@@ -9,7 +9,7 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function handleRegister(event: React.FormEvent<HTMLFormElement>) {
+  async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(""); // Limpa erros anteriores
     
@@ -24,6 +24,46 @@ export default function RegisterForm() {
       return;
     }
 
+    console.log("📤 Tentando registrar:", { name, email, password: '***' });
+
+    // 🔥 PRIMEIRO: Teste manual da API
+    try {
+      const testResponse = await fetch('/api/auth/sign-up/email', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password
+        })
+      });
+      
+      console.log("🔍 Resposta direta da API:");
+      console.log("Status:", testResponse.status);
+      console.log("Headers:", Object.fromEntries(testResponse.headers.entries()));
+      
+      const responseText = await testResponse.text();
+      console.log("Response body:", responseText);
+      
+      if (!testResponse.ok) {
+        setError(`Erro ${testResponse.status}: ${responseText || 'Erro na API'}`);
+        return;
+      }
+      
+      // Se chegou aqui, o registro foi bem-sucedido
+      console.log("✅ Registro bem-sucedido via API direta!");
+      redirect("/login");
+      
+    } catch (apiError) {
+      console.error("❌ Erro na chamada direta da API:", apiError);
+      setError("Falha na conexão com o servidor");
+    }
+
+    // 🔥 SEGUNDO: Se a API direta funcionar, tente com authClient
+    // (Comente o código acima e descomente este se quiser testar o authClient)
+    /*
     authClient.signUp.email(
       {
         name: name,
@@ -38,46 +78,15 @@ export default function RegisterForm() {
         onRequest: () => setLoading(true),
         onResponse: () => setLoading(false),
         onError: (ctx) => {
-          // 🔥 CORREÇÃO: Tratamento de erro mais robusto e type-safe
-          console.error("Erro completo no registro:", ctx);
+          console.log("🔍 Contexto completo do erro:", JSON.stringify(ctx, null, 2));
+          console.log("Tipo do ctx:", typeof ctx);
+          console.log("Keys do ctx:", Object.keys(ctx));
           
-          // Função auxiliar para extrair mensagem de forma segura
-          const getErrorMessage = (): string => {
-            // Tentativa 1: ctx.error como objeto com message
-            if (ctx.error && typeof ctx.error === 'object' && 'message' in ctx.error) {
-              return (ctx.error as any).message;
-            }
-            
-            // Tentativa 2: ctx.error como string
-            if (typeof ctx.error === 'string') {
-              return ctx.error;
-            }
-            
-            // Tentativa 3: ctx.response.data.message
-            if (ctx.response && typeof ctx.response === 'object' && 'data' in ctx.response) {
-              const responseData = (ctx.response as any).data;
-              if (responseData && typeof responseData === 'object' && 'message' in responseData) {
-                return responseData.message;
-              }
-            }
-            
-            // Tentativa 4: Mensagem genérica baseada no status
-            if (ctx.response && typeof ctx.response === 'object' && 'status' in ctx.response) {
-              const status = (ctx.response as any).status;
-              if (status === 409) return "Usuário já existe";
-              if (status === 400) return "Dados inválidos";
-              if (status >= 500) return "Erro interno do servidor";
-            }
-            
-            // Fallback
-            return "Erro desconhecido no registro";
-          };
-          
-          const errorMessage = getErrorMessage();
-          setError(errorMessage);
+          setError("Falha no registro. Verifique o console.");
         }
       }
     );
+    */
   }
 
   return (
