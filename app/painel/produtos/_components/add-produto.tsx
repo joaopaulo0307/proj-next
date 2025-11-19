@@ -1,3 +1,4 @@
+// app/painel/produtos/_components/edit-produto.tsx - CORRIGIDO
 'use client'
 
 import { Button } from '@/components/ui/button'
@@ -7,31 +8,40 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useState, useTransition } from 'react'
-import { criarProduto } from '../actions'
+import { useState, useTransition, useEffect } from 'react'
+import { editarProduto } from '../actions'
 import { toast } from 'sonner'
+
+interface Produto {
+  id: string
+  nome: string
+  preco: number
+  descricao: string | null
+  categoriaId: string
+}
 
 interface Categoria {
   id: string
   nome: string
 }
 
-interface AddProdutoProps {
+interface EditProdutoProps {
+  produto: Produto
   categorias: Categoria[]
   onSuccess?: () => void
 }
 
-export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
+export default function EditProduto({ produto, categorias, onSuccess }: EditProdutoProps) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   async function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      const result = await criarProduto(formData)
+      const result = await editarProduto(produto.id, formData)
       if (result.error) {
         toast.error(result.error)
       } else {
-        toast.success('Produto criado com sucesso!')
+        toast.success('Produto atualizado com sucesso!')
         setOpen(false)
         onSuccess?.()
       }
@@ -41,12 +51,12 @@ export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Adicionar Produto</Button>
+        <Button variant="outline" size="sm">Editar</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar Produto</DialogTitle>
-          <DialogDescription>Cadastre um novo produto vinculado a uma categoria.</DialogDescription>
+          <DialogTitle>Editar Produto</DialogTitle>
+          <DialogDescription>Atualize as informações do produto.</DialogDescription>
         </DialogHeader>
         <form action={handleSubmit}>
           <div className="space-y-4 py-4">
@@ -55,6 +65,7 @@ export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
               <Input 
                 id="nome" 
                 name="nome" 
+                defaultValue={produto.nome}
                 required 
                 disabled={isPending} 
               />
@@ -66,6 +77,7 @@ export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
                 name="preco" 
                 type="number" 
                 step="0.01" 
+                defaultValue={produto.preco}
                 required 
                 disabled={isPending} 
               />
@@ -76,6 +88,7 @@ export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
                 id="descricao" 
                 name="descricao" 
                 placeholder="Opcional" 
+                defaultValue={produto.descricao || ''}
                 disabled={isPending} 
               />
             </div>
@@ -85,6 +98,7 @@ export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
                 id="categoriaId" 
                 name="categoriaId" 
                 className="border rounded-md p-2 w-full" 
+                defaultValue={produto.categoriaId}
                 required 
                 disabled={isPending || categorias.length === 0}
               >
@@ -115,7 +129,7 @@ export default function AddProduto({ categorias, onSuccess }: AddProdutoProps) {
               type="submit" 
               disabled={isPending || categorias.length === 0}
             >
-              {isPending ? 'Salvando...' : 'Salvar'}
+              {isPending ? 'Atualizando...' : 'Atualizar'}
             </Button>
           </DialogFooter>
         </form>

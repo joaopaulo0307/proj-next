@@ -26,19 +26,21 @@ export default function AddPedido() {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [produtos, setProdutos] = useState<Produto[]>([])
-  const [carregandoProdutos, setCarregandoProdutos] = useState(true)
+  const [carregandoProdutos, setCarregandoProdutos] = useState(false)
+  const [erroCarregamento, setErroCarregamento] = useState('')
 
+  // ✅ CORREÇÃO: Carrega produtos quando abre o dialog
   useEffect(() => {
     if (open) {
       setCarregandoProdutos(true)
-      console.log('🔄 Buscando produtos da API...')
+      setErroCarregamento('')
+      
+      console.log('🔄 Buscando produtos...')
       
       fetch('/api/produtos')
         .then((res) => {
-          console.log('📡 Status da resposta:', res.status)
-          if (!res.ok) {
-            throw new Error(`Erro HTTP! status: ${res.status}`)
-          }
+          console.log('📡 Status da API:', res.status)
+          if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`)
           return res.json()
         })
         .then((data) => {
@@ -48,20 +50,31 @@ export default function AddPedido() {
         })
         .catch((error) => {
           console.error('❌ Erro ao carregar produtos:', error)
-          toast.error('Erro ao carregar produtos')
+          setErroCarregamento('Erro ao carregar produtos')
           setCarregandoProdutos(false)
-          setProdutos([])
+          toast.error('Erro ao carregar produtos')
         })
-    } else {
-      // Reset quando fechar o dialog
-      setProdutos([])
-      setCarregandoProdutos(true)
     }
-  }, [open])
+  }, [open]) // ✅ Recarrega sempre que abre
 
-  async function handleSubmit(formData: FormData) {
+   async function handleSubmit(formData: FormData) {
+    // ✅ DEBUG: Verifique o que está sendo enviado
+    const produtosSelecionados = formData.getAll('produtos')
+    const nome = formData.get('nome')
+    const endereco = formData.get('endereco')
+    const telefone = formData.get('telefone')
+    
+    console.log('🎯 Dados do formulário:')
+    console.log('Nome:', nome)
+    console.log('Endereço:', endereco)
+    console.log('Telefone:', telefone)
+    console.log('Produtos selecionados:', produtosSelecionados)
+    console.log('Quantidade de produtos:', produtosSelecionados.length)
+
     startTransition(async () => {
       const result = await criarPedido(formData)
+      console.log('📋 Resultado da criação:', result)
+      
       if (result.error) {
         toast.error(result.error)
       } else {
@@ -76,7 +89,7 @@ export default function AddPedido() {
       <DialogTrigger asChild>
         <Button>Novo Pedido</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Criar Pedido</DialogTitle>
           <DialogDescription>
@@ -129,6 +142,10 @@ export default function AddPedido() {
                   <option value="" disabled>
                     🌀 Carregando produtos...
                   </option>
+                ) : erroCarregamento ? (
+                  <option value="" disabled>
+                    ❌ {erroCarregamento}
+                  </option>
                 ) : produtos.length === 0 ? (
                   <option value="" disabled>
                     📭 Nenhum produto cadastrado
@@ -136,7 +153,7 @@ export default function AddPedido() {
                 ) : (
                   produtos.map((produto) => (
                     <option key={produto.id} value={produto.id}>
-                      {produto.nome} - R$ {produto.preco.toFixed(2)}
+                      {produto.nome} - R$ {produto.preco?.toFixed(2) || '0.00'}
                     </option>
                   ))
                 )}
@@ -144,6 +161,15 @@ export default function AddPedido() {
               <p className="text-xs text-muted-foreground mt-1">
                 Segure <kbd>Ctrl</kbd> (ou <kbd>Cmd</kbd> no Mac) para selecionar múltiplos produtos.
               </p>
+              
+              {/* ✅ Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Produtos carregados: {produtos.length} | 
+                  Carregando: {carregandoProdutos.toString()} | 
+                  Erro: {erroCarregamento || 'Nenhum'}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
