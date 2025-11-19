@@ -7,22 +7,22 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String    @id @default(cuid())  
+  id            String    @id
   name          String
-  email         String    @unique
+  email         String
   emailVerified Boolean   @default(false)
-  password      String?   
   image         String?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
   accounts      Account[]
 
+  @@unique([email])
   @@map("user")
 }
 
@@ -75,9 +75,6 @@ model Categorias {
   id       String     @id @default(uuid())
   nome     String
   produtos Produtos[]
-
-  @@map("categorias")
-
 }
 
 model Produtos {
@@ -87,9 +84,8 @@ model Produtos {
   descricao   String?
   categoriaId String
   categoria   Categorias @relation(fields: [categoriaId], references: [id])
-  pedidos     Pedidos[]  @relation("PedidosProdutos")  
-
-  @@map("produtos")
+  Pedidos     Pedidos?   @relation(fields: [pedidosId], references: [id])
+  pedidosId   String?
 }
 
 model Pedidos {
@@ -97,7 +93,5 @@ model Pedidos {
   nome     String
   endereco String
   telefone String
-  produtos Produtos[] @relation("PedidosProdutos")  
-
-  @@map("pedidos")
+  produtos Produtos[]
 }

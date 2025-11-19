@@ -1,49 +1,41 @@
-import prisma from '@/lib/prisma-client'
-import AddProduto from './_components/add-produto'
-import EditProduto from './_components/edit-produto'
-import DeleteProduto from './_components/delete-produto'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import prisma from "@/lib/prisma-client"
+import AddCategorias from '../categorias/_components/add-categorias'
+import EditCategoria from '../categorias/_components/edit-categoria'
+import DeleteCategoria from '../categorias/_components/delete-categoria'
 
-export default async function ProdutosPage() {
-  const [produtos, categorias] = await Promise.all([
-    prisma.produtos.findMany({
-      include: { categoria: true },
-      orderBy: { nome: 'asc' },
-    }),
-    prisma.categorias.findMany({
-      orderBy: { nome: 'asc' },
-    })
-  ])
+export default async function CategoriasPage() {
+  const categorias = await prisma.categorias.findMany({
+    orderBy: {
+      nome: 'asc'
+    }
+  })
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Produtos</h1>
-        <AddProduto categorias={categorias} />
+      <div className='flex items-center justify-between'>
+        <h1 className='text-2xl font-semibold'>Categorias</h1>
+        <AddCategorias />
       </div>
 
-      {produtos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-8 text-center text-muted-foreground">
-          <p>Nenhum produto cadastrado</p>
-          <p className="text-sm">Clique em "Adicionar Produto" para cadastrar um novo item.</p>
+      {categorias.length === 0 ? (
+        <div className='flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-8 text-center text-muted-foreground'>
+          <p>Nenhuma categoria cadastrada</p>
+          <p className="text-sm">Clique em "Adicionar Categoria" para criar sua primeira categoria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {produtos.map((produto) => (
-            <Card key={produto.id} className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <CardTitle className="text-lg line-clamp-1">{produto.nome}</CardTitle>
+          {categorias.map(categoria => (
+            <Card key={categoria.id} className="transition-shadow hover:shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="line-clamp-1 text-lg">{categoria.nome}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p><strong>Preço:</strong> R$ {produto.preco.toFixed(2)}</p>
-                <p><strong>Categoria:</strong> {produto.categoria.nome}</p>
-                {produto.descricao && (
-                  <p className="text-muted-foreground line-clamp-2">{produto.descricao}</p>
-                )}
+              <CardContent className="pb-3">
+                <p className="text-xs text-muted-foreground">ID: {categoria.id}</p>
               </CardContent>
-              <CardFooter className="flex justify-end gap-2">
-                <EditProduto produto={produto} categorias={categorias} />
-                <DeleteProduto produto={produto} />
+              <CardFooter className='flex items-center justify-end gap-2'>
+                <EditCategoria categoria={categoria} />
+                <DeleteCategoria categoria={categoria} />
               </CardFooter>
             </Card>
           ))}
