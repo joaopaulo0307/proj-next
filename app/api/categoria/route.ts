@@ -1,35 +1,97 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma-client'
 import { z } from 'zod'
+import { requireAuth } from '@/lib/api-auth'
 
 const categoriaSchema = z.object({
-  nome: z.string().min(2, 'Nome obrigatório'),
+  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  descricao: z.string().optional(),
 })
 
-// 🔹 Listar categorias
-export async function GET() {
-  const categorias = await prisma.categorias.findMany({
-    orderBy: { nome: 'asc' },
-  })
-  return NextResponse.json(categorias)
+export async function GET(req: Request) {
+  try {
+    const session = await requireAuth(req);
+    if (session instanceof NextResponse) return session;
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    
+    const [categorias, total] = await Promise.all([
+      prisma.categorias.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { nome: 'asc' },
+      }),
+      prisma.categorias.count()
+    ]);
+
+    return NextResponse.json({
+      categorias,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' }, 
+      { status: 500 }
+    );
+  }
 }
 
-// 🔹 Criar categoria
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const result = categoriaSchema.safeParse(body)
+    const session = await requireAuth(req);
+    if (session instanceof NextResponse) return session;
+
+    const body = await req.json();
+    const result = categoriaSchema.safeParse(body);
+    
     if (!result.success) {
-      const error = result.error.issues[0]?.message ?? 'Erro de validação'
-      return NextResponse.json({ error }, { status: 400 })
+      const errors = result.error.issues.map(issue => ({
+        field: issue.path[0],
+        message: issue.message
+      }));
+      return NextResponse.json({ errors }, { status: 400 });
     }
 
-    const nova = await prisma.categorias.create({
+    // Verificar se categoria já existe
+    const existe = await prisma.categorias.findFirst({
+      where: { nome: result.data.nome }
+    });
+
+    if (existe) {
+      return NextResponse.json(
+        { error: 'Categoria já existe' }, 
+        { status: 409 }
+      );
+    }
+
+    const novaCategoria = await prisma.categorias.create({
       data: result.data,
-    })
-    return NextResponse.json(nova)
-  } catch (err) {
-    console.error('Erro ao criar categoria:', err)
-    return NextResponse.json({ error: 'Erro ao criar categoria' }, { status: 500 })
+    });
+
+    return NextResponse.json(novaCategoria, { status: 201 });
+  } catch (error) {
+    console.error('Erro ao criar categoria:', error);
+    return NextResponse.json(
+      { error: 'Erro ao criar categoria' }, 
+      { status: 500 }
+    );
   }
+}
+
+// Para categorias e produtos, adicione:
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  // Implementar delete
+}
+
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  // Implementar update
 }

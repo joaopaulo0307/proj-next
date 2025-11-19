@@ -13,7 +13,7 @@ export default function LoginForm() {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
-    const password = formData.get("password") as string; // ✅ Mude para "password"
+    const password = formData.get("password") as string;
 
     authClient.signIn.email({
       email: email,
