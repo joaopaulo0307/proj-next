@@ -13,9 +13,15 @@ const pedidoSchema = z.object({
 
 export async function criarPedido(formData: FormData) {
   const produtosString = formData.get("produtos") as string
-  const produtos = produtosString.split(",")
+  const produtos = produtosString ? produtosString.split(",").filter(Boolean) : []
 
-  const data = { ...Object.fromEntries(formData), produtos }
+  const data = { 
+    nome: formData.get("nome") as string,
+    endereco: formData.get("endereco") as string,
+    telefone: formData.get("telefone") as string,
+    produtos 
+  }
+  
   const result = pedidoSchema.safeParse(data)
 
   if (!result.success) {
@@ -31,7 +37,7 @@ export async function criarPedido(formData: FormData) {
         telefone: result.data.telefone,
         produtos: {
           create: result.data.produtos.map((produtoId) => ({
-            produtoId: produtoId
+            produtoId: produtoId // ✅ CORRETO para seu schema
           })),
         },
       },
@@ -46,9 +52,15 @@ export async function criarPedido(formData: FormData) {
 
 export async function editarPedido(id: string, formData: FormData) {
   const produtosString = formData.get("produtos") as string
-  const produtos = produtosString.split(",")
+  const produtos = produtosString ? produtosString.split(",").filter(Boolean) : []
 
-  const data = { ...Object.fromEntries(formData), produtos }
+  const data = { 
+    nome: formData.get("nome") as string,
+    endereco: formData.get("endereco") as string,
+    telefone: formData.get("telefone") as string,
+    produtos 
+  }
+  
   const result = pedidoSchema.safeParse(data)
 
   if (!result.success) {
@@ -57,23 +69,29 @@ export async function editarPedido(id: string, formData: FormData) {
   }
 
   try {
-    await prisma.pedidosProdutos.deleteMany({
-      where: { pedidoId: id }
+    // Usar transaction para garantir consistência
+    await prisma.$transaction(async (tx) => {
+      // Deleta as relações antigas
+      await tx.pedidosProdutos.deleteMany({
+        where: { pedidoId: id }
+      })
+
+      // Atualiza o pedido e cria novas relações
+      await tx.pedidos.update({
+        where: { id },
+        data: {
+          nome: result.data.nome,
+          endereco: result.data.endereco,
+          telefone: result.data.telefone,
+          produtos: {
+            create: result.data.produtos.map((produtoId) => ({
+              produtoId: produtoId // ✅ CORRETO para seu schema
+            })),
+          },
+        },
+      })
     })
 
-    await prisma.pedidos.update({
-      where: { id },
-      data: {
-        nome: result.data.nome,
-        endereco: result.data.endereco,
-        telefone: result.data.telefone,
-        produtos: {
-          create: result.data.produtos.map((produtoId) => ({
-            produtoId: produtoId
-          })),
-        },
-      },
-    })
     revalidatePath('/painel/pedidos')
     return { success: true }
   } catch (error) {
@@ -84,10 +102,6 @@ export async function editarPedido(id: string, formData: FormData) {
 
 export async function excluirPedido(id: string) {
   try {
-    await prisma.pedidosProdutos.deleteMany({
-      where: { pedidoId: id }
-    })
-
     await prisma.pedidos.delete({
       where: { id },
     })

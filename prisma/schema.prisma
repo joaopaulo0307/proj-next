@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   output   = "../generated/prisma"
 }
 
@@ -10,6 +10,7 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
 
 model User {
   id            String    @id @default(cuid())
@@ -25,9 +26,9 @@ model User {
 }
 
 model Session {
-  id        String   @id @default(cuid())
+  id        String   @id
   expiresAt DateTime
-  token     String   @unique // Este já cria um constraint único
+  token     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -35,13 +36,12 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // REMOVE esta linha - conflita com @unique acima
-  // @@unique([token])
+  @@unique([token])
   @@map("session")
 }
 
 model Account {
-  id                    String    @id @default(cuid())
+  id                    String    @id
   accountId             String
   providerId            String
   userId                String
@@ -60,12 +60,12 @@ model Account {
 }
 
 model Verification {
-  id         String   @id @default(cuid())
+  id         String   @id
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verification")
 }
