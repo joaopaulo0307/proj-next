@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,24 +11,23 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String    @id @default(cuid())
   name          String
-  email         String
+  email         String    @unique
   emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
 
-  @@unique([email])
-  @@map("user")
+  @@map("users")
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(cuid())
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -37,12 +35,11 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
-  @@map("session")
+  @@map("sessions")
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(cuid())
   accountId             String
   providerId            String
   userId                String
@@ -57,41 +54,50 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  @@map("account")
+  @@map("accounts")
 }
 
 model Verification {
-  id         String   @id
+  id         String   @id @default(cuid())
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
-  @@map("verification")
+  @@map("verifications")
 }
 
 model Categorias {
-  id       String     @id @default(uuid())
+  id       String    @id @default(uuid())
   nome     String
   produtos Produtos[]
+
+  @@map("categorias")
 }
 
 model Produtos {
-  id          String     @id @default(uuid())
+  id          String    @id @default(uuid())
   nome        String
   preco       Float
   descricao   String?
   categoriaId String
-  categoria   Categorias @relation(fields: [categoriaId], references: [id])
-  Pedidos     Pedidos?   @relation(fields: [pedidosId], references: [id])
-  pedidosId   String?
+  categoria   Categorias @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  
+  // 🔥 CORREÇÃO: Relação muitos-para-muitos com Pedidos
+  pedidos     Pedidos[] @relation("PedidoProdutos")
+  
+  @@map("produtos")
 }
 
 model Pedidos {
-  id       String     @id @default(uuid())
+  id       String    @id @default(uuid())
   nome     String
   endereco String
   telefone String
-  produtos Produtos[]
+  
+  // 🔥 CORREÇÃO: Relação muitos-para-muitos com Produtos
+  produtos Produtos[] @relation("PedidoProdutos")
+  
+  @@map("pedidos")
 }
