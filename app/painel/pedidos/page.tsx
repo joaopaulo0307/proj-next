@@ -1,11 +1,17 @@
-import prisma from '@/lib/prisma-client'
+import prisma from "@/lib/prisma-client"
 import { columns } from './columns'
 import { DataTable } from '@/components/ui/data-table'
 import AddPedido from './_components/add-pedido'
 
 export default async function PedidosPage() {
   const pedidos = await prisma.pedidos.findMany({
-    include: { produtos: true },
+    include: {
+      produtos: {
+        include: {
+          produto: true // ← importante para acessar nome e preço no DataTable
+        }
+      }
+    },
     orderBy: { nome: 'asc' },
   })
 

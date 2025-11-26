@@ -11,10 +11,13 @@ export const columns: ColumnDef<any>[] = [
   {
     id: "produtos",
     header: "Produtos",
-    cell: ({ row }) => row.original.produtos.map((p: any) => p.nome).join(", "),
+    cell: ({ row }) =>
+      row.original.produtos
+        .map((p: any) => `${p.produto.nome} (R$ ${p.produto.preco.toFixed(2)})`)
+        .join(", "),
   },
   {
-    id: "actions",
+    id: "acoes",
     header: "Ações",
     cell: ({ row }) => (
       <div className="flex gap-2">
@@ -22,5 +25,5 @@ export const columns: ColumnDef<any>[] = [
         <DeletePedido pedido={row.original} />
       </div>
     ),
-  },
+  }
 ]

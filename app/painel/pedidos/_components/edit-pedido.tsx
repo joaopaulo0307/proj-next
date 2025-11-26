@@ -21,31 +21,46 @@ export default function EditPedido({ pedido }: { pedido: any }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  const [produtos, setProdutos] = useState<{ id: string; nome: string }[]>([])
+  // ✅ CORRIGIDO: Formato correto para o MultiSelectCombobox
+  const [produtos, setProdutos] = useState<{ label: string; value: string }[]>([])
+  
+  // ✅ CORRIGIDO: Acessar o ID do produto corretamente (pode ser produtoId ou id)
   const [selectedProdutos, setSelectedProdutos] = useState<string[]>(
-    pedido.produtos.map((p: any) => p.id)
+    pedido.produtos.map((p: any) => p.produtoId || p.id)
   )
 
+  // ✅ CORRIGIDO: Carregar produtos apenas quando abrir o dialog
   useEffect(() => {
-    fetch('/api/produtos')
-      .then((res) => res.json())
-      .then((data) => {
-        const formatted = data.map((p: any) => ({
-          id: p.id,
-          nome: `${p.nome} — R$ ${Number(p.preco || 0).toFixed(2)}`
-        }))
-        setProdutos(formatted)
-      })
-  }, [])
+    if (open) {
+      fetch('/api/produtos')
+        .then((res) => {
+          if (!res.ok) throw new Error('Erro ao carregar produtos')
+          return res.json()
+        })
+        .then((data) => {
+          // ✅ CORRETO: Formatar para o formato esperado pelo combobox
+          const formatted = data.map((p: any) => ({
+            label: `${p.nome} — R$ ${Number(p.preco || 0).toFixed(2)}`,
+            value: p.id
+          }))
+          setProdutos(formatted)
+        })
+        .catch(error => {
+          console.error('Erro ao carregar produtos:', error)
+          toast.error('Erro ao carregar produtos')
+        })
+    }
+  }, [open])
 
   async function handleSubmit(formData: FormData) {
     formData.append("produtos", selectedProdutos.join(","))
 
     startTransition(async () => {
       const result = await editarPedido(pedido.id, formData)
-      if (result.error) toast.error(result.error)
-      else {
-        toast.success('Pedido atualizado!')
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success('Pedido atualizado com sucesso!')
         setOpen(false)
       }
     })
@@ -102,9 +117,9 @@ export default function EditPedido({ pedido }: { pedido: any }) {
 
             <div>
               <Label>Produtos</Label>
-
+              {/* ✅ CORRETO: Usar 'options' em vez de 'items' (ou ajuste conforme seu componente) */}
               <MultiSelectCombobox
-                items={produtos}
+                options={produtos}
                 value={selectedProdutos}
                 onChange={setSelectedProdutos}
                 placeholder="Selecione os produtos"

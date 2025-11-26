@@ -51,7 +51,6 @@ export default function AddPedido() {
     trigger('produtos')
   }, [selectedProdutos, setValue, trigger])
 
-  // ✅ CORRIGIDO: Carregar produtos apenas quando o dialog abrir
   useEffect(() => {
     if (open) {
       fetch('/api/produtos')
