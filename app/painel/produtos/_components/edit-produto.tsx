@@ -11,17 +11,11 @@ import { useState, useTransition, useEffect } from 'react'
 import { editarProduto, buscarCategorias } from '../actions'
 import { toast } from 'sonner'
 
-interface Produto {
-  id: string
-  nome: string
-  preco: number
-  descricao: string | null
-  categoriaId: string
-}
+import { Produtos } from "@/generated/prisma/client"
+
 
 interface EditProdutoProps {
-  produto: Produto
-  categorias: { id: string; nome: string }[]
+  produto: Produtos
   onSuccess?: () => void
 }
 

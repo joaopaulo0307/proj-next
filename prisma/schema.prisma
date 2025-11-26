@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -85,7 +85,7 @@ model Produtos {
   categoriaId String
   categoria   Categorias        @relation(fields: [categoriaId], references: [id])
   pedidos     PedidosProdutos[] 
-  imagemUrl   String?  
+  imagemUrl   String?        
 }
 
 model Pedidos {
@@ -94,8 +94,6 @@ model Pedidos {
   endereco String
   telefone String
   produtos PedidosProdutos[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model PedidosProdutos {

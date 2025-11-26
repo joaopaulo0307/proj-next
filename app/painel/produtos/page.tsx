@@ -100,7 +100,7 @@ export default async function ProdutosPage() {
               <Separator />
               
               <CardFooter className="flex justify-end gap-2 pt-4">
-                <EditProduto produto={produto} categorias={categorias} />
+                <EditProduto produto={produto}/>
                 <DeleteProduto produto={produto} />
               </CardFooter>
             </Card>
