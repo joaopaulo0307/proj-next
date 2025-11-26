@@ -1,9 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma Schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -84,8 +82,7 @@ model Produtos {
   descricao   String?
   categoriaId String
   categoria   Categorias        @relation(fields: [categoriaId], references: [id])
-  pedidos     PedidosProdutos[] 
-  imagemUrl   String?        
+  produtos    PedidosProdutos[]   // <-- NOME IGUAL AO OUTRO LADO
 }
 
 model Pedidos {
@@ -93,14 +90,15 @@ model Pedidos {
   nome     String
   endereco String
   telefone String
-  produtos PedidosProdutos[]
+  produtos PedidosProdutos[]   // <-- IGUAL AO DE CIMA
 }
 
 model PedidosProdutos {
-  id        String   @id @default(uuid()) // chave primária própria
+  id        String @id @default(uuid())
   pedidoId  String
   produtoId String
 
-  pedido    Pedidos  @relation(fields: [pedidoId], references: [id])
-  produto   Produtos @relation(fields: [produtoId], references: [id])
+  pedido  Pedidos  @relation(fields: [pedidoId], references: [id])
+  produto Produtos @relation(fields: [produtoId], references: [id])
 }
+

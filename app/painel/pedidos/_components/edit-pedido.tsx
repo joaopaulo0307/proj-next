@@ -20,11 +20,10 @@ import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox"
 export default function EditPedido({ pedido }: { pedido: any }) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+
   const [produtos, setProdutos] = useState<{ id: string; nome: string }[]>([])
-  
-  // CORREÇÃO: usar p.produtoId em vez de p.id
   const [selectedProdutos, setSelectedProdutos] = useState<string[]>(
-    pedido.produtos.map((p: any) => p.produtoId)
+    pedido.produtos.map((p: any) => p.id)
   )
 
   useEffect(() => {
@@ -40,23 +39,14 @@ export default function EditPedido({ pedido }: { pedido: any }) {
   }, [])
 
   async function handleSubmit(formData: FormData) {
-    // Adicionar validação
-    if (selectedProdutos.length === 0) {
-      toast.error('Selecione pelo menos um produto')
-      return
-    }
-
     formData.append("produtos", selectedProdutos.join(","))
 
     startTransition(async () => {
       const result = await editarPedido(pedido.id, formData)
-      if (result.error) {
-        toast.error(result.error)
-      } else {
+      if (result.error) toast.error(result.error)
+      else {
         toast.success('Pedido atualizado!')
         setOpen(false)
-        // Recarregar a página para atualizar os dados
-        window.location.reload()
       }
     })
   }
@@ -112,21 +102,13 @@ export default function EditPedido({ pedido }: { pedido: any }) {
 
             <div>
               <Label>Produtos</Label>
-              <MultiSelectCombobox
-                options={produtos.map((p) => ({
-                  label: p.nome,   // o texto exibido
-                  value: p.id,     // o id enviado
-                }))}
 
+              <MultiSelectCombobox
+                items={produtos}
                 value={selectedProdutos}
                 onChange={setSelectedProdutos}
                 placeholder="Selecione os produtos"
               />
-              {selectedProdutos.length > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  {selectedProdutos.length} produto(s) selecionado(s)
-                </p>
-              )}
             </div>
           </div>
 
@@ -140,7 +122,7 @@ export default function EditPedido({ pedido }: { pedido: any }) {
               Cancelar
             </Button>
 
-            <Button type="submit" disabled={isPending || selectedProdutos.length === 0}>
+            <Button type="submit" disabled={isPending}>
               Salvar Alterações
             </Button>
           </DialogFooter>

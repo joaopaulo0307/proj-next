@@ -11,14 +11,24 @@ import { useState, useTransition, useEffect } from 'react'
 import { editarProduto, buscarCategorias } from '../actions'
 import { toast } from 'sonner'
 
-import { Produtos } from "@/generated/prisma/client"
-
+interface Produto {
+  id: string
+  nome: string
+  preco: number
+  descricao: string | null
+  categoriaId: string
+}
 
 interface EditProdutoProps {
-  produto: Produtos
+  produto: Produto
   onSuccess?: () => void
 }
 
+interface EditProdutoProps {
+  produto: Produto
+  categorias: { id: string; nome: string }[] // ← Adicione esta linha
+  onSuccess?: () => void
+}
 
 export default function EditProduto({ produto, onSuccess }: EditProdutoProps) {
   const [open, setOpen] = useState(false)
