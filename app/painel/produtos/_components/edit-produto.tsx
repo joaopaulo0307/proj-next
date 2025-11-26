@@ -21,14 +21,10 @@ interface Produto {
 
 interface EditProdutoProps {
   produto: Produto
+  categorias: { id: string; nome: string }[]
   onSuccess?: () => void
 }
 
-interface EditProdutoProps {
-  produto: Produto
-  categorias: { id: string; nome: string }[] // ← Adicione esta linha
-  onSuccess?: () => void
-}
 
 export default function EditProduto({ produto, onSuccess }: EditProdutoProps) {
   const [open, setOpen] = useState(false)

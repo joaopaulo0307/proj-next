@@ -1,41 +1,107 @@
+import prisma from '@/lib/prisma-client'
+import AddProduto from './_components/add-produto'
+import EditProduto from './_components/edit-produto'
+import DeleteProduto from './_components/delete-produto'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import prisma from "@/lib/prisma-client"
-import AddCategorias from '../categorias/_components/add-categorias'
-import EditCategoria from '../categorias/_components/edit-categoria'
-import DeleteCategoria from '../categorias/_components/delete-categoria'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Image } from 'lucide-react'
 
-export default async function CategoriasPage() {
-  const categorias = await prisma.categorias.findMany({
-    orderBy: {
-      nome: 'asc'
-    }
-  })
+export default async function ProdutosPage() {
+  const [produtos, categorias] = await Promise.all([
+    prisma.produtos.findMany({
+      include: { categoria: true },
+      orderBy: { nome: 'asc' },
+    }),
+    prisma.categorias.findMany({
+      orderBy: { nome: 'asc' },
+    })
+  ])
 
   return (
     <div className="space-y-6">
-      <div className='flex items-center justify-between'>
-        <h1 className='text-2xl font-semibold'>Categorias</h1>
-        <AddCategorias />
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Produtos</h1>
+          <p className="text-sm text-muted-foreground">
+            Gerencie os produtos do seu catálogo
+          </p>
+        </div>
+        <AddProduto categorias={categorias} />
       </div>
 
-      {categorias.length === 0 ? (
-        <div className='flex flex-col items-center justify-center gap-2 rounded-md border border-dashed p-8 text-center text-muted-foreground'>
-          <p>Nenhuma categoria cadastrada</p>
-          <p className="text-sm">Clique em "Adicionar Categoria" para criar sua primeira categoria.</p>
+      <Separator />
+
+      {produtos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-8 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <Image className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Nenhum produto cadastrado</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Comece adicionando produtos ao seu catálogo para que apareçam aqui.
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {categorias.map(categoria => (
-            <Card key={categoria.id} className="transition-shadow hover:shadow-md">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {produtos.map((produto) => (
+            <Card key={produto.id} className="overflow-hidden transition-all hover:shadow-lg">
+              {/* Imagem do Produto */}
+              <div className="aspect-square overflow-hidden bg-muted">
+                {produto.imagemUrl ? (
+                  <img
+                    src={produto.imagemUrl}
+                    alt={produto.nome}
+                    className="h-full w-full object-cover transition-transform hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <Image className="mx-auto h-12 w-12 mb-2" />
+                      <p className="text-xs">Sem imagem</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <CardHeader className="pb-3">
-                <CardTitle className="line-clamp-1 text-lg">{categoria.nome}</CardTitle>
+                <div className="flex items-start justify-between space-x-2">
+                  <CardTitle className="text-lg leading-6 line-clamp-2 flex-1">
+                    {produto.nome}
+                  </CardTitle>
+                  <Badge variant="secondary" className="ml-2 shrink-0">
+                    {produto.categoria.nome}
+                  </Badge>
+                </div>
               </CardHeader>
+              
               <CardContent className="pb-3">
-                <p className="text-xs text-muted-foreground">ID: {categoria.id}</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Preço</span>
+                    <span className="text-lg font-bold text-primary">
+                      R$ {produto.preco.toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  {produto.descricao && (
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground">Descrição</span>
+                      <p className="text-sm text-foreground mt-1 line-clamp-2">
+                        {produto.descricao}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
-              <CardFooter className='flex items-center justify-end gap-2'>
-                <EditCategoria categoria={categoria} />
-                <DeleteCategoria categoria={categoria} />
+
+              <Separator />
+              
+              <CardFooter className="flex justify-end gap-2 pt-4">
+                <EditProduto produto={produto} categorias={categorias} />
+                <DeleteProduto produto={produto} />
               </CardFooter>
             </Card>
           ))}
